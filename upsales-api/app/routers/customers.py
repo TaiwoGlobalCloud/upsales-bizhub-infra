@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app import models, schemas
+from app.auth import get_current_user
 
 router = APIRouter(
     prefix="/customers",
@@ -11,12 +12,19 @@ router = APIRouter(
 
 
 @router.get("/")
-def get_customers(db: Session = Depends(get_db)):
+def get_customers(
+    current_user: str = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     return db.query(models.Customer).all()
 
 
 @router.get("/{customer_id}")
-def get_customer(customer_id: int, db: Session = Depends(get_db)):
+def get_customer(
+    customer_id: int,
+    current_user: str = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     customer = db.query(models.Customer).filter(
         models.Customer.id == customer_id
     ).first()
@@ -33,6 +41,7 @@ def get_customer(customer_id: int, db: Session = Depends(get_db)):
 @router.post("/")
 def create_customer(
     customer: schemas.CustomerCreate,
+    current_user: str = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     db_customer = models.Customer(
@@ -46,11 +55,13 @@ def create_customer(
     db.refresh(db_customer)
 
     return db_customer
-@router.put("/{customer_id}")
 
+
+@router.put("/{customer_id}")
 def update_customer(
     customer_id: int,
     customer: schemas.CustomerCreate,
+    current_user: str = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     db_customer = db.query(models.Customer).filter(
@@ -76,6 +87,7 @@ def update_customer(
 @router.delete("/{customer_id}")
 def delete_customer(
     customer_id: int,
+    current_user: str = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     customer = db.query(models.Customer).filter(
