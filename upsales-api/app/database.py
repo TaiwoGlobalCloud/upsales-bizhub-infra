@@ -1,12 +1,9 @@
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.orm import sessionmaker, declarative_base, Session
 
-DATABASE_URL = "sqlite:///./upsales.db"
+DATABASE_URL = "postgresql://postgres:1987@localhost:5432/upsalesdb"
 
-engine = create_engine(
-    DATABASE_URL,
-    connect_args={"check_same_thread": False}
-)
+engine = create_engine(DATABASE_URL)
 
 SessionLocal = sessionmaker(
     autocommit=False,
@@ -15,8 +12,6 @@ SessionLocal = sessionmaker(
 )
 
 Base = declarative_base()
-
-from sqlalchemy.orm import Session
 
 
 def get_db():
