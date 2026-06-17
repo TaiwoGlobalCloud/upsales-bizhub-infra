@@ -11,6 +11,7 @@ override.tf.json
 # Python
 __pycache__/
 *.pyc
+.env
 
 # SQLite
 *.db

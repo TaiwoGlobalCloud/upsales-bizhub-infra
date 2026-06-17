@@ -1,6 +1,3 @@
-from jose import jwt, JWTError
-from fastapi import Depends, HTTPException
-from fastapi.security import OAuth2PasswordBearer
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
@@ -33,7 +30,7 @@ def register(
             detail="Username already exists"
         )
 
-    db_user = models.User(
+    new_user = models.User(
         username=user.username,
         email=user.email,
         hashed_password=hash_password(
@@ -41,9 +38,8 @@ def register(
         )
     )
 
-    db.add(db_user)
+    db.add(new_user)
     db.commit()
-    db.refresh(db_user)
 
     return {
         "message": "User registered successfully"
@@ -52,22 +48,22 @@ def register(
 
 @router.post("/login")
 def login(
-    user: schemas.UserLogin,
+    user_data: schemas.UserLogin,
     db: Session = Depends(get_db)
 ):
-    db_user = db.query(models.User).filter(
-        models.User.username == user.username
+    user = db.query(models.User).filter(
+        models.User.username == user_data.username
     ).first()
 
-    if not db_user:
+    if not user:
         raise HTTPException(
             status_code=401,
             detail="Invalid credentials"
         )
 
     if not verify_password(
-        user.password,
-        db_user.hashed_password
+        user_data.password,
+        user.hashed_password
     ):
         raise HTTPException(
             status_code=401,
@@ -75,40 +71,10 @@ def login(
         )
 
     access_token = create_access_token(
-        data={"sub": db_user.username}
+        data={"sub": user.username}
     )
 
     return {
         "access_token": access_token,
         "token_type": "bearer"
     }
-
-oauth2_scheme = OAuth2PasswordBearer(
-    tokenUrl="auth/login"
-)
-
-
-def get_current_user(
-    token: str = Depends(oauth2_scheme)
-):
-    credentials_exception = HTTPException(
-        status_code=401,
-        detail="Could not validate credentials"
-    )
-
-    try:
-        payload = jwt.decode(
-            token,
-            SECRET_KEY,
-            algorithms=[ALGORITHM]
-        )
-
-        username = payload.get("sub")
-
-        if username is None:
-            raise credentials_exception
-
-        return username
-
-    except JWTError:
-        raise credentials_exception
