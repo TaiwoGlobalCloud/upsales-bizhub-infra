@@ -35,7 +35,8 @@ def register(
         email=user.email,
         hashed_password=hash_password(
             user.password
-        )
+        ),
+        role=user.role
     )
 
     db.add(new_user)
@@ -71,10 +72,14 @@ def login(
         )
 
     access_token = create_access_token(
-        data={"sub": user.username}
+        data={
+            "sub": user.username,
+            "role": user.role
+        }
     )
 
     return {
         "access_token": access_token,
-        "token_type": "bearer"
+        "token_type": "bearer",
+        "role": user.role
     }

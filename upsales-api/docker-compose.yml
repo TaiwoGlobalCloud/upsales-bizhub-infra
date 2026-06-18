@@ -1,0 +1,30 @@
+services:
+  db:
+    image: postgres:17
+    container_name: upsales-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1987
+      POSTGRES_DB: upsalesdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  api:
+    build: .
+    container_name: upsales-api
+    restart: always
+    depends_on:
+      - db
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://postgres:1987@db:5432/upsalesdb
+      SECRET_KEY: upsales-super-secret-key
+      ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: 30
+
+volumes:
+  postgres_data:
