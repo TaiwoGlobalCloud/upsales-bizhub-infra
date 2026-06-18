@@ -13,7 +13,7 @@ router = APIRouter(
 
 @router.get("/")
 def get_customers(
-    current_user: str = Depends(get_current_user),
+    current_user=Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     return db.query(models.Customer).all()
@@ -22,7 +22,7 @@ def get_customers(
 @router.get("/{customer_id}")
 def get_customer(
     customer_id: int,
-    current_user: str = Depends(get_current_user),
+    current_user=Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     customer = db.query(models.Customer).filter(
@@ -41,7 +41,7 @@ def get_customer(
 @router.post("/")
 def create_customer(
     customer: schemas.CustomerCreate,
-    current_user: str = Depends(get_current_user),
+    current_user=Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     db_customer = models.Customer(
@@ -61,7 +61,7 @@ def create_customer(
 def update_customer(
     customer_id: int,
     customer: schemas.CustomerCreate,
-    current_user: str = Depends(get_current_user),
+    current_user=Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     db_customer = db.query(models.Customer).filter(
@@ -87,9 +87,16 @@ def update_customer(
 @router.delete("/{customer_id}")
 def delete_customer(
     customer_id: int,
-    current_user: str = Depends(get_current_user),
+    current_user=Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    # Admin-only authorization
+    if current_user["role"] != "Admin":
+        raise HTTPException(
+            status_code=403,
+            detail="Admin privileges required"
+        )
+
     customer = db.query(models.Customer).filter(
         models.Customer.id == customer_id
     ).first()
